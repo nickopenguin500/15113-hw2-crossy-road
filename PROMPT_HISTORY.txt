@@ -1,0 +1,10 @@
+I focused on replicating the main features from Crossy Road as I remember it. I used Gemini Pro and cmu_graphics.
+
+Prompts:
+Create a detailed crossy road game using Python and cmu_graphics. Include the main features that make crossy road the iconic game that it is. For example, the roads, cars, grid-style movement, four-directional movement, rivers, logs, lilypads, trains, etc. If you have any questions, ask them first.
+Theres no collision with the cars
+Theres a black bar on the bottom that grows the more you move forward.
+Now, can you make the lilypads static with more frequent logs passing through the rivers
+it feels like sometimes, certain lanes of rivers don't have logs at all. Also, some logs are overlapping
+the lilypads still move you to the right constantly when you stand on them
+There is no Check River Logic block
