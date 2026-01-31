@@ -12,4 +12,18 @@ Prompts:
 9. Exception: Use our rounded(n) instead of Python 3's round(n)
   Python 3's round(n) does not work as one might expect!
   If you still want Python 3's round, use pythonRound
-10. 
+10. Could you redo the grid-system? The game seems to be running on a coordinate system right now, but it would be better to have everything occupy blocks of space
+***May have lost a lot of time here, as I was asking to basically completely rechange the code to fit a grid system. This was around 30 mins.
+11. The lilypads and logs have issues with the character moving again
+12. No i meant the issue was that when the character stands on a log or lilypad, they move constantly too fast (outpaces log, moves on static lilypad)
+13. side-to-side movement on the logs is still buggy, it should use the log as a reference point and move accordingly, but the character moves inconsistently due to the changing position of the log
+14. Now can you improve the graphics? specifically for the roads, cars, and the grass(make the grass alternating chess-board style squares)
+15. An error occurred. Here is the stack trace:
+  "/Users/nickopenguin500/Documents/GitHub/15113-hw2-crossy-road/crossyRoad.py", line 217:
+        drawRect(c * app.gridSize, screenY, app.gridSize, app.gridSize, fill=gColor)
+Exception: TypeError: Rect.fill should be a color, and #7CFC00 is not a legal color name
+16. Can you make the score label in the top left a different color to stand out more from the game? also display the score when dying. Also keep track of the top score and also show that when dying
+17. Do you have any suggestions on how to improve this game
+18. where in onkeypress do i paste #3
+19. snatched by the eagle is printing to the console instead of showing ingame
+20. the snatched by the eagle text is bigger than the box

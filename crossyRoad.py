@@ -21,6 +21,9 @@ def onAppStart(app):
     
     app.scrollOffset = 0
     app.rows = []
+    app.idleTimer = 0
+    app.hopScale = 1.0
+    app.gameOverMessage = "GAME OVER" # Default message
     
     # Generate initial terrain
     for i in range(-5, 15):
@@ -84,6 +87,18 @@ def spawnBlockObstacles(app, row, typeName, widthInBlocks, density):
 
 def onStep(app):
     if app.gameOver: return
+
+    # --- 1. Eagle Logic (Anti-Camping) ---
+    app.idleTimer += 1
+    if app.idleTimer > 150: # About 5 seconds of standing still
+        app.gameOver = True
+        app.gameOverMessage = "SNATCHED BY EAGLE!" # <--- CHANGE THIS # Placeholder for animation
+
+    # --- 2. Hop Physics ---
+    if app.hopScale > 1.0:
+        app.hopScale -= 0.05 # Decay scale back to normal
+    else:
+        app.hopScale = 1.0
 
     # Manage Rows
     if app.rows[0]['index'] < app.playerRow - 10:
@@ -157,8 +172,15 @@ def onStep(app):
 
 def onKeyPress(app, key):
     if app.gameOver:
-        if key == 'r': onAppStart(app)
+        if key == 'r': 
+            onAppStart(app)
+            app.gameOverMessage = "GAME OVER" # Reset to default
         return
+    
+    # Reset eagle timer whenever we move
+    app.idleTimer = 0
+    # Trigger the hop visual
+    app.hopScale = 1.4
 
     targetRow = app.playerRow
     targetCol = app.playerCol
@@ -265,11 +287,32 @@ def redrawAll(app):
     pScreenY = app.height - (app.playerRow * app.gridSize) + app.scrollOffset - app.gridSize
     
     if not app.isDrowning:
-        drawOval(pScreenX+20, pScreenY+35, 30, 10, fill='black', opacity=30)
-        drawRect(pScreenX+5, pScreenY+5, 30, 30, fill='white')
-        drawRect(pScreenX+15, pScreenY+2, 10, 5, fill='red')
-        drawRect(pScreenX+18, pScreenY+15, 4, 4, fill='black')
-        drawPolygon(pScreenX+15, pScreenY+25, pScreenX+25, pScreenY+25, pScreenX+20, pScreenY+32, fill='orange')
+        # Calculate center for scaling
+        cX = pScreenX + app.gridSize/2
+        cY = pScreenY + app.gridSize/2
+        
+        # Apply Hop Scale
+        size = 30 * app.hopScale
+        
+        # Shadow (gets smaller when hopping high)
+        shadowSize = 30 / app.hopScale 
+        drawOval(cX, pScreenY+35, shadowSize, 10, fill='black', opacity=30, align='center')
+        
+        # Body (Draws from center to scale correctly)
+        drawRect(cX, cY, size, size, fill='white', align='center')
+        
+        # Details need to be relative to center (cX, cY) to scale properly
+        # Or just keep them simple for now
+        drawRect(cX, cY - size/2 + 5, 10, 5, fill='red', align='center') # Comb
+        drawRect(cX + 5, cY - 5, 4, 4, fill='black', align='center') # Eye
+        drawPolygon(cX, cY+5, cX+10, cY+5, cX+5, cY+12, fill='orange') # Beak
+
+    # Draw Eagle Shadow warning if timer is getting high
+    if app.idleTimer > 100:
+        opacity = (app.idleTimer - 100) * 2 # Gets darker as you wait
+        if opacity > 100: opacity = 100
+        # creepy shadow growing over player
+        drawOval(pScreenX + 20, pScreenY + 20, app.idleTimer, app.idleTimer/2, fill='black', opacity=opacity)
 
     # --- UI UPDATES ---
     
@@ -279,14 +322,15 @@ def redrawAll(app):
         drawRect(10, 10, 140, 40, fill='black', opacity=60, border='white', borderWidth=2)
         drawLabel(f"SCORE: {app.score}", 80, 30, size=24, fill='yellow', bold=True)
     
-    # 2. Game Over Screen (Score + High Score)
+    # 2. Game Over Screen
     else:
-        # Box
-        boxW, boxH = 300, 160
+        # Box: Widen it from 300 to 360
+        boxW, boxH = 360, 160
         drawRect(app.width/2 - boxW/2, app.height/2 - boxH/2, boxW, boxH, fill='white', border='black', borderWidth=3)
         
-        # Text
-        drawLabel("GAME OVER", app.width/2, app.height/2 - 40, size=35, bold=True, fill='black')
+        # Text: Reduce size from 35 to 28
+        drawLabel(app.gameOverMessage, app.width/2, app.height/2 - 40, size=28, bold=True, fill='black')
+        
         drawLabel(f"Final Score: {app.score}", app.width/2, app.height/2, size=20, fill='dimGray')
         drawLabel(f"TOP SCORE: {app.highScore}", app.width/2, app.height/2 + 25, size=20, fill='gold', bold=True, border='black', borderWidth=1)
         
