@@ -135,10 +135,13 @@ def onStep(app):
     if app.gameOver: return
 
     # --- 1. Manage Rows & Generation ---
-    lowestIndex = app.rows[0]['index']
-    if lowestIndex < app.playerRow - 20:
-        app.rows.pop(0)
+    # Remove rows that are too far behind (Changed to 20 to fix black bar)
+    if len(app.rows) > 0:
+        lowestIndex = app.rows[0]['index']
+        if lowestIndex < app.playerRow - 20:
+            app.rows.pop(0)
     
+    # Add rows ahead
     highestIndex = app.rows[-1]['index']
     if highestIndex < app.playerRow + 15:
         generateRow(app, highestIndex + 1)
@@ -151,82 +154,89 @@ def onStep(app):
         if row['type'] in ['road', 'river']:
             for obs in row['obstacles']:
                 
-                # CHANGED: Use individual obstacle speed if it exists, otherwise row speed
-                # This allows Lilypads to stay still (speed 0) while logs move
+                # Get speed (Logs move, Lilypads are 0)
                 speed = obs.get('speed', row['speed'])
                 obs['x'] += speed * row['direction']
                 
-                # Wrap around logic
+                # Wrap around logic (Only for moving items)
                 if speed > 0:
-                    # If moving RIGHT
                     if row['direction'] == 1 and obs['x'] > app.width + 100:
-                        obs['x'] = -200 - obs['width'] # Send it further back
-                        
-                    # If moving LEFT
+                        obs['x'] = -200 - obs['width']
                     elif row['direction'] == -1 and obs['x'] < -100 - obs['width']:
-                        obs['x'] = app.width + 200 # Send it further back
+                        obs['x'] = app.width + 200
 
         # Train Logic
         if row['type'] == 'rail':
             row['trainTimer'] -= 1
             if row['trainTimer'] <= 60 and row['trainTimer'] > 0:
-                row['trainActive'] = False 
+                row['trainActive'] = False # Warning phase
             elif row['trainTimer'] <= 0:
                 row['trainActive'] = True
                 if len(row['obstacles']) == 0:
+                    # Spawn train
                     row['obstacles'].append({
                         'x': -1000 if row['direction'] == 1 else app.width + 1000, 
                         'width': app.gridSize * 15, 
                         'type': 'train'
                     })
                 
+                # Move train
                 train = row['obstacles'][0]
                 train['x'] += row['speed'] * row['direction']
                 
+                # Reset if train leaves screen
                 if (row['direction'] == 1 and train['x'] > app.width + 1000) or \
                    (row['direction'] == -1 and train['x'] < -1000):
                     row['obstacles'] = []
                     row['trainTimer'] = random.randint(200, 400)
                     row['trainActive'] = False
 
-    # --- 3. FIX: Simplified Collision Logic ---
+    # --- 3. Collision Logic ---
     
-    # Check bounds
+    # Check bounds (Left/Right side of screen)
     if app.playerCol < 0 or app.playerCol > 9:
         app.gameOver = True 
 
     if currentRow:
-        # ROAD COLLISION (Fixed)
+        # ROAD COLLISION
         if currentRow['type'] == 'road':
-            # We are on the road row, so we just check if our X overlaps any car X
-            # Added a small buffer (+5/-5) so you don't die if you touch the bumper by 1 pixel
             for car in currentRow['obstacles']:
+                # Simple X-axis overlap check
                 if (app.playerX + 5 < car['x'] + car['width'] and 
                     app.playerX + 35 > car['x']):
                     app.gameOver = True
         
-        # RAIL COLLISION (Fixed)
+        # RAIL COLLISION
         elif currentRow['type'] == 'rail' and len(currentRow['obstacles']) > 0:
             train = currentRow['obstacles'][0]
             if (app.playerX + 5 < train['x'] + train['width'] and 
                 app.playerX + 35 > train['x']):
                 app.gameOver = True
 
-        # RIVER COLLISION (Logic remains similar)
+        # RIVER COLLISION (Fixed for CMU Graphics)
         elif currentRow['type'] == 'river':
             onLog = False
+            
             for obs in currentRow['obstacles']:
-                # Tighter tolerance for logs so you don't stand on thin air
+                # Check bounds
                 if (app.playerX + 10 < obs['x'] + obs['width'] and 
                     app.playerX + 30 > obs['x']):
                     onLog = True
-                    app.playerX += currentRow['speed'] * currentRow['direction']
+                    
+                    # Move player visually
+                    obsSpeed = obs.get('speed', currentRow['speed'])
+                    app.playerX += obsSpeed * currentRow['direction']
+                    
+                    # FIX: Use 'rounded' instead of 'round'
+                    app.playerCol = rounded(app.playerX / app.gridSize)
+                    
                     break
             
             if not onLog:
                 app.gameOver = True
                 app.isDrowning = True
             
+            # Die if log carries you off screen
             if app.playerX < -app.gridSize or app.playerX > app.width:
                 app.gameOver = True
 

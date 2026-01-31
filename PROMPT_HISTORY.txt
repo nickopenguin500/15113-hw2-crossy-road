@@ -1,10 +1,15 @@
 I focused on replicating the main features from Crossy Road as I remember it. I used Gemini Pro and cmu_graphics.
 
 Prompts:
-Create a detailed crossy road game using Python and cmu_graphics. Include the main features that make crossy road the iconic game that it is. For example, the roads, cars, grid-style movement, four-directional movement, rivers, logs, lilypads, trains, etc. If you have any questions, ask them first.
-Theres no collision with the cars
-Theres a black bar on the bottom that grows the more you move forward.
-Now, can you make the lilypads static with more frequent logs passing through the rivers
-it feels like sometimes, certain lanes of rivers don't have logs at all. Also, some logs are overlapping
-the lilypads still move you to the right constantly when you stand on them
-There is no Check River Logic block
+1. Create a detailed crossy road game using Python and cmu_graphics. Include the main features that make crossy road the iconic game that it is. For example, the roads, cars, grid-style movement, four-directional movement, rivers, logs, lilypads, trains, etc. If you have any questions, ask them first.
+2. Theres no collision with the cars
+3. Theres a black bar on the bottom that grows the more you move forward.
+4. Now, can you make the lilypads static with more frequent logs passing through the rivers
+5. it feels like sometimes, certain lanes of rivers don't have logs at all. Also, some logs are overlapping
+6. the lilypads still move you to the right constantly when you stand on them
+7. There is no Check River Logic block
+8. Movement on the logs is buggy, the game doesnt seem to update the backend location constantly, only when pressing a button
+9. Exception: Use our rounded(n) instead of Python 3's round(n)
+  Python 3's round(n) does not work as one might expect!
+  If you still want Python 3's round, use pythonRound
+10. 
